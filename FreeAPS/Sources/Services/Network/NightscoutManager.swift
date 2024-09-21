@@ -503,13 +503,21 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
         let defaultProfile = "default"
 
         let now = Date()
+
+        let bundleIdentifier = Bundle.main.bundleIdentifier ?? ""
+        let deviceToken = UserDefaults.standard.string(forKey: "deviceToken") ?? ""
+        let isAPNSProduction = UserDefaults.standard.bool(forKey: "isAPNSProduction")
+
         let p = NightscoutProfileStore(
             defaultProfile: defaultProfile,
             startDate: now,
             mills: Int(now.timeIntervalSince1970) * 1000,
             units: nsUnits,
             enteredBy: NightscoutTreatment.local,
-            store: [defaultProfile: ps]
+            store: [defaultProfile: ps],
+            bundleIdentifier: bundleIdentifier,
+            deviceToken: deviceToken,
+            isAPNSProduction: isAPNSProduction
         )
 
         guard let nightscout = nightscoutAPI, isNetworkReachable, isUploadEnabled else {

@@ -21,6 +21,7 @@ enum Screen: Identifiable, Hashable {
     case bolus(waitForSuggestion: Bool)
     case manualTempBasal
     case autotuneConfig
+    case remoteControl
     case dataTable
     case cgm
     case cgmDirect
@@ -79,6 +80,8 @@ extension Screen {
             ManualTempBasal.RootView(resolver: resolver)
         case .autotuneConfig:
             AutotuneConfig.RootView(resolver: resolver)
+        case .remoteControl:
+            RemoteControlConfig.RootView(resolver: resolver)
         case .dataTable:
             DataTable.RootView(resolver: resolver)
         case .cgm:

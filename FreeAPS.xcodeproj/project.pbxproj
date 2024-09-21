@@ -354,6 +354,12 @@
 		DD1DB7CC2BECCA1F0048B367 /* BuildDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD1DB7CB2BECCA1F0048B367 /* BuildDetails.swift */; };
 		DD1DB7CE2BED00CF0048B367 /* SettingsRootViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD1DB7CD2BED00CF0048B367 /* SettingsRootViewModel.swift */; };
 		DD399FB31EACB9343C944C4C /* PreferencesEditorStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA3E609094E064C99A4752C /* PreferencesEditorStateModel.swift */; };
+		DDFBA4612C9F097C00536365 /* RemoteControlConfigDataFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDFBA4602C9F097C00536365 /* RemoteControlConfigDataFlow.swift */; };
+		DDFBA4632C9F09BD00536365 /* RemoteControlConfigProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDFBA4622C9F09BD00536365 /* RemoteControlConfigProvider.swift */; };
+		DDFBA4652C9F0A3300536365 /* RemoteControlConfigStateModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDFBA4642C9F0A3300536365 /* RemoteControlConfigStateModel.swift */; };
+		DDFBA4682C9F0A9300536365 /* RemoteControlConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDFBA4672C9F0A9300536365 /* RemoteControlConfig.swift */; };
+		DDFBA46B2C9F0C4800536365 /* PushMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDFBA46A2C9F0C4800536365 /* PushMessage.swift */; };
+		DDFBA46D2C9F0C6C00536365 /* TrioRemoteControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDFBA46C2C9F0C6C00536365 /* TrioRemoteControl.swift */; };
 		E00EEC0327368630002FF094 /* ServiceAssembly.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00EEBFD27368630002FF094 /* ServiceAssembly.swift */; };
 		E00EEC0427368630002FF094 /* SecurityAssembly.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00EEBFE27368630002FF094 /* SecurityAssembly.swift */; };
 		E00EEC0527368630002FF094 /* StorageAssembly.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00EEBFF27368630002FF094 /* StorageAssembly.swift */; };
@@ -885,6 +891,12 @@
 		DC2C6489D29ECCCAD78E0721 /* NotificationsConfigStateModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotificationsConfigStateModel.swift; sourceTree = "<group>"; };
 		DD1DB7CB2BECCA1F0048B367 /* BuildDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildDetails.swift; sourceTree = "<group>"; };
 		DD1DB7CD2BED00CF0048B367 /* SettingsRootViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRootViewModel.swift; sourceTree = "<group>"; };
+		DDFBA4602C9F097C00536365 /* RemoteControlConfigDataFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteControlConfigDataFlow.swift; sourceTree = "<group>"; };
+		DDFBA4622C9F09BD00536365 /* RemoteControlConfigProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteControlConfigProvider.swift; sourceTree = "<group>"; };
+		DDFBA4642C9F0A3300536365 /* RemoteControlConfigStateModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteControlConfigStateModel.swift; sourceTree = "<group>"; };
+		DDFBA4672C9F0A9300536365 /* RemoteControlConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteControlConfig.swift; sourceTree = "<group>"; };
+		DDFBA46A2C9F0C4800536365 /* PushMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushMessage.swift; sourceTree = "<group>"; };
+		DDFBA46C2C9F0C6C00536365 /* TrioRemoteControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrioRemoteControl.swift; sourceTree = "<group>"; };
 		E00EEBFD27368630002FF094 /* ServiceAssembly.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServiceAssembly.swift; sourceTree = "<group>"; };
 		E00EEBFE27368630002FF094 /* SecurityAssembly.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecurityAssembly.swift; sourceTree = "<group>"; };
 		E00EEBFF27368630002FF094 /* StorageAssembly.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StorageAssembly.swift; sourceTree = "<group>"; };
@@ -1156,6 +1168,7 @@
 		3811DE0325C9D31700A708ED /* Modules */ = {
 			isa = PBXGroup;
 			children = (
+				DDFBA45F2C9F095A00536365 /* RemoteControlConfig */,
 				CEE9A64D2BBB411C00EB5194 /* Calibrations */,
 				190EBCC229FF134900BA767D /* StatConfig */,
 				CE94597C29E9E1CD0047C9C6 /* WatchConfig */,
@@ -1203,6 +1216,7 @@
 		3811DE1325C9D39E00A708ED /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				DDFBA4692C9F0C1F00536365 /* TrioRemoteControl */,
 				CE7CA3422A064973004BE681 /* Shortcuts */,
 				3811DEDE25C9E2DD00A708ED /* Application */,
 				3811DF0A25CAAAA500A708ED /* APS */,
@@ -2179,6 +2193,34 @@
 			path = ISFEditor;
 			sourceTree = "<group>";
 		};
+		DDFBA45F2C9F095A00536365 /* RemoteControlConfig */ = {
+			isa = PBXGroup;
+			children = (
+				DDFBA4662C9F0A7B00536365 /* View */,
+				DDFBA4602C9F097C00536365 /* RemoteControlConfigDataFlow.swift */,
+				DDFBA4622C9F09BD00536365 /* RemoteControlConfigProvider.swift */,
+				DDFBA4642C9F0A3300536365 /* RemoteControlConfigStateModel.swift */,
+			);
+			path = RemoteControlConfig;
+			sourceTree = "<group>";
+		};
+		DDFBA4662C9F0A7B00536365 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				DDFBA4672C9F0A9300536365 /* RemoteControlConfig.swift */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		DDFBA4692C9F0C1F00536365 /* TrioRemoteControl */ = {
+			isa = PBXGroup;
+			children = (
+				DDFBA46A2C9F0C4800536365 /* PushMessage.swift */,
+				DDFBA46C2C9F0C6C00536365 /* TrioRemoteControl.swift */,
+			);
+			path = TrioRemoteControl;
+			sourceTree = "<group>";
+		};
 		E00EEBFC27368630002FF094 /* Assemblies */ = {
 			isa = PBXGroup;
 			children = (
@@ -2658,6 +2700,7 @@
 				19D466A729AA2C22004D5F33 /* FPUConfigStateModel.swift in Sources */,
 				38E44528274E401C00EC9A94 /* Protected.swift in Sources */,
 				3811DEB625C9D88300A708ED /* UnlockManager.swift in Sources */,
+				DDFBA46B2C9F0C4800536365 /* PushMessage.swift in Sources */,
 				E00EEC0827368630002FF094 /* NetworkAssembly.swift in Sources */,
 				38A13D3225E28B4B00EAA382 /* PumpHistoryEvent.swift in Sources */,
 				E00EEC0627368630002FF094 /* UIAssembly.swift in Sources */,
@@ -2708,6 +2751,7 @@
 				38A9260525F012D8009E3739 /* CarbRatios.swift in Sources */,
 				38FCF3D625E8FDF40078B0D1 /* MD5.swift in Sources */,
 				3871F39C25ED892B0013ECB5 /* TempTarget.swift in Sources */,
+				DDFBA4612C9F097C00536365 /* RemoteControlConfigDataFlow.swift in Sources */,
 				191F62682AD6B05A004D7911 /* NightscoutSettings.swift in Sources */,
 				FEFA5C11299F814A00765C17 /* CoreDataStack.swift in Sources */,
 				3811DEAB25C9D88300A708ED /* HTTPResponseStatus.swift in Sources */,
@@ -2727,6 +2771,7 @@
 				38DAB28A260D349500F74C1A /* FetchGlucoseManager.swift in Sources */,
 				38F37828261260DC009DB701 /* Color+Extensions.swift in Sources */,
 				3811DE3F25C9D4A100A708ED /* SettingsStateModel.swift in Sources */,
+				DDFBA4632C9F09BD00536365 /* RemoteControlConfigProvider.swift in Sources */,
 				C20BC6CE2C66FBFD002BC1C6 /* Rounding.swift in Sources */,
 				CE7CA3582A064E2F004BE681 /* ListStateView.swift in Sources */,
 				193F6CDD2A512C8F001240FD /* Loops.swift in Sources */,
@@ -2742,6 +2787,7 @@
 				CE7CA34E2A064973004BE681 /* AppShortcuts.swift in Sources */,
 				38C4D33A25E9A1ED00D30B77 /* NSObject+AssociatedValues.swift in Sources */,
 				38DF179027733EAD00B3528F /* SnowScene.swift in Sources */,
+				DDFBA46D2C9F0C6C00536365 /* TrioRemoteControl.swift in Sources */,
 				38AAF8712600C1B0004AF583 /* MainChartView.swift in Sources */,
 				DD1DB7CC2BECCA1F0048B367 /* BuildDetails.swift in Sources */,
 				19DC677F29CA675700FD9EC4 /* OverrideProfilesDataFlow.swift in Sources */,
@@ -2770,6 +2816,7 @@
 				2BE9A6FA20875F6F4F9CD461 /* PumpSettingsEditorProvider.swift in Sources */,
 				6B9625766B697D1C98E455A2 /* PumpSettingsEditorStateModel.swift in Sources */,
 				19A910362A24D6D700C8951B /* DateFilter.swift in Sources */,
+				DDFBA4652C9F0A3300536365 /* RemoteControlConfigStateModel.swift in Sources */,
 				A0B8EC8CC5CD1DD237D1BCD2 /* PumpSettingsEditorRootView.swift in Sources */,
 				E06B911A275B5EEA003C04B6 /* Array+Extension.swift in Sources */,
 				38EA0600262091870064E39B /* BolusProgressViewStyle.swift in Sources */,
@@ -2809,6 +2856,7 @@
 				69B9A368029F7EB39F525422 /* CREditorStateModel.swift in Sources */,
 				38E44538274E411700EC9A94 /* Disk+[Data].swift in Sources */,
 				98641AF4F92123DA668AB931 /* CREditorRootView.swift in Sources */,
+				DDFBA4682C9F0A9300536365 /* RemoteControlConfig.swift in Sources */,
 				CEE9A65C2BBB41C800EB5194 /* CalibrationService.swift in Sources */,
 				38E4453D274E411700EC9A94 /* Disk+Errors.swift in Sources */,
 				38E98A2325F52C9300C0CED0 /* Signpost.swift in Sources */,

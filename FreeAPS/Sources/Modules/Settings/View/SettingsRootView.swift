@@ -49,6 +49,7 @@ extension Settings {
                     Text("Carb Ratios").navigationLink(to: .crEditor, from: self)
                     Text("Target Glucose").navigationLink(to: .targetsEditor, from: self)
                     Text("Autotune").navigationLink(to: .autotuneConfig, from: self)
+                    Text("Remote Control").navigationLink(to: .remoteControl, from: self)
                 } header: { Text("Configuration") }
 
                 Section {
