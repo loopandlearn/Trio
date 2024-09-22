@@ -6,6 +6,7 @@ class TrioRemoteControl: Injectable {
 
     @Injected() private var tempTargetsStorage: TempTargetsStorage!
     @Injected() private var carbsStorage: CarbsStorage!
+    @Injected() private var nightscoutManager: NightscoutManager!
 
     private let timeWindow: TimeInterval = 3 // Defines how old messages that are accepted
 
@@ -183,10 +184,31 @@ class TrioRemoteControl: Injectable {
         debug(.remoteControl, "Temp Target cancelled successfully.")
     }
 
-    func determineAPNSEnvironment() {
+    func handleAPNSChanges(deviceToken: String?) {
+        let previousDeviceToken = UserDefaults.standard.string(forKey: "deviceToken")
+        let previousIsAPNSProduction = UserDefaults.standard.bool(forKey: "isAPNSProduction")
+
         let isAPNSProduction = isRunningInAPNSProductionEnvironment()
 
-        debug(.remoteControl, "APNS Environment determined: \(isAPNSProduction ? "Production" : "Sandbox")")
+        var shouldUploadProfiles = false
+
+        if let token = deviceToken, token != previousDeviceToken {
+            UserDefaults.standard.set(token, forKey: "deviceToken")
+            debug(.remoteControl, "Device Token updated: \(token)")
+            shouldUploadProfiles = true
+        }
+
+        if previousIsAPNSProduction != isAPNSProduction {
+            UserDefaults.standard.set(isAPNSProduction, forKey: "isAPNSProduction")
+            debug(.remoteControl, "APNS Environment changed to: \(isAPNSProduction ? "Production" : "Sandbox")")
+            shouldUploadProfiles = true
+        }
+
+        if shouldUploadProfiles {
+            nightscoutManager.uploadProfileAndSettings(true)
+        } else {
+            debug(.remoteControl, "No changes detected in deviceToken or APNS environment.")
+        }
     }
 
     private func isRunningInAPNSProductionEnvironment() -> Bool {

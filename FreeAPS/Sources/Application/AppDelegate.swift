@@ -31,11 +31,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, ObservableObject, UNUserNoti
         let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
         let token = tokenParts.joined()
 
-        UserDefaults.standard.set(token, forKey: "deviceToken")
-
-        debug(.remoteControl, "Device Token: \(token)")
-
-        TrioRemoteControl.shared.determineAPNSEnvironment()
+        TrioRemoteControl.shared.handleAPNSChanges(deviceToken: token)
     }
 
     func application(
