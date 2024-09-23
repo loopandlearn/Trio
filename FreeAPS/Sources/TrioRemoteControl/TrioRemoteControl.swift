@@ -8,7 +8,7 @@ class TrioRemoteControl: Injectable {
     @Injected() private var carbsStorage: CarbsStorage!
     @Injected() private var nightscoutManager: NightscoutManager!
 
-    private let timeWindow: TimeInterval = 10 // Defines how old messages that are accepted
+    private let timeWindow: TimeInterval = 180 // Defines how old messages that are accepted
 
     private init() {
         injectServices(FreeAPSApp.resolver)
