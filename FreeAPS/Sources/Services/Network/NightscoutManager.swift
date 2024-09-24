@@ -16,6 +16,7 @@ protocol NightscoutManager: GlucoseSource {
     func uploadPreferences(_ preferences: Preferences)
     func uploadProfileAndSettings(_: Bool)
     var cgmURL: URL? { get }
+    func uploadNoteTreatment(note: String)
 }
 
 final class BaseNightscoutManager: NightscoutManager, Injectable {
@@ -91,8 +92,8 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
         let useLocal = settingsManager.settings.useLocalGlucoseSource
 
         let maybeNightscout = useLocal
-            ? NightscoutAPI(url: URL(string: "http://127.0.0.1:\(settingsManager.settings.localGlucosePort)")!)
-            : nightscoutAPI
+        ? NightscoutAPI(url: URL(string: "http://127.0.0.1:\(settingsManager.settings.localGlucosePort)")!)
+        : nightscoutAPI
 
         return maybeNightscout?.url
     }
@@ -108,8 +109,8 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
         }
 
         let maybeNightscout = useLocal
-            ? NightscoutAPI(url: URL(string: "http://127.0.0.1:\(settingsManager.settings.localGlucosePort)")!)
-            : nightscoutAPI
+        ? NightscoutAPI(url: URL(string: "http://127.0.0.1:\(settingsManager.settings.localGlucosePort)")!)
+        : nightscoutAPI
 
         guard let nightscout = maybeNightscout else {
             return Just([]).eraseToAnyPublisher()
@@ -637,6 +638,23 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
                     }
                 } receiveValue: {}
                 .store(in: &self.lifetime)
+        }
+    }
+    
+    func uploadNoteTreatment(note: String) {
+        let uploadedNotes = storage.retrieve(OpenAPS.Nightscout.uploadedNotes, as: [NightscoutTreatment].self) ?? []
+        let now = Date()
+
+        if uploadedNotes.last?.notes != note || (uploadedNotes.last?.createdAt ?? .distantPast) != now {
+            let noteTreatment = NightscoutTreatment(
+                eventType: .note,
+                createdAt: now,
+                enteredBy: NightscoutTreatment.local,
+                notes: note,
+                targetTop: nil,
+                targetBottom: nil
+            )
+            uploadTreatments([noteTreatment], fileToSave: OpenAPS.Nightscout.uploadedNotes)
         }
     }
 }

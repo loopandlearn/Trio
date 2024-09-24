@@ -76,6 +76,7 @@ enum EventType: String, JSON {
     case nsAnnouncement = "Announcement"
     case nsSensorChange = "Sensor Start"
     case nsExternalInsulin = "External Insulin"
+    case note = "Note"
 }
 
 enum TempType: String, JSON {
