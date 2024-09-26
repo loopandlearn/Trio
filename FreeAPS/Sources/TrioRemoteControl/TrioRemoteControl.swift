@@ -7,8 +7,9 @@ class TrioRemoteControl: Injectable {
     @Injected() private var tempTargetsStorage: TempTargetsStorage!
     @Injected() private var carbsStorage: CarbsStorage!
     @Injected() private var nightscoutManager: NightscoutManager!
+    @Injected() private var pumpHistoryStorage: PumpHistoryStorage!
 
-    private let timeWindow: TimeInterval = 300 // Defines how old messages that are accepted
+    private let timeWindow: TimeInterval = 600 // Defines how old messages that are accepted, 10 minutes
 
     private init() {
         injectServices(FreeAPSApp.resolver)
@@ -114,6 +115,19 @@ class TrioRemoteControl: Injectable {
             return
         }
 
+        let pushMessageDate = Date(timeIntervalSince1970: pushMessage.timestamp)
+
+        let recentCarbEntries = carbsStorage.recent()
+
+        let carbsAfterPushMessage = recentCarbEntries.filter { $0.createdAt > pushMessageDate }
+
+        if !carbsAfterPushMessage.isEmpty {
+            let note = "Meal command rejected: there are carb entries logged after the push message was created."
+            debug(.remoteControl, note)
+            nightscoutManager.uploadNoteTreatment(note: note)
+            return
+        }
+
         let mealEntry = CarbsEntry(
             id: UUID().uuidString,
             createdAt: Date(),
@@ -142,6 +156,22 @@ class TrioRemoteControl: Injectable {
 
         guard bolusAmount <= maxBolus else {
             let note = "Bolus command rejected: requested amount \(bolusAmount) exceeds max bolus limit of \(maxBolus)."
+            debug(.remoteControl, note)
+            nightscoutManager.uploadNoteTreatment(note: note)
+            return
+        }
+
+        let recentPumpEvents = pumpHistoryStorage.recent()
+
+        let recentBoluses = recentPumpEvents.filter { event in
+            event.type == .bolus && event.timestamp > Date(timeIntervalSince1970: pushMessage.timestamp)
+        }
+
+        let totalRecentBolusAmount = recentBoluses.reduce(Decimal(0)) { $0 + ($1.amount ?? 0) }
+
+        if totalRecentBolusAmount >= bolusAmount * 0.2 {
+            let note =
+                "Bolus command rejected: total recent bolus amount exceeds 20% of requested bolus amount."
             debug(.remoteControl, note)
             nightscoutManager.uploadNoteTreatment(note: note)
             return

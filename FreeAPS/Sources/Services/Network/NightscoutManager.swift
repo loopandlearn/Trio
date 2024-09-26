@@ -92,8 +92,8 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
         let useLocal = settingsManager.settings.useLocalGlucoseSource
 
         let maybeNightscout = useLocal
-        ? NightscoutAPI(url: URL(string: "http://127.0.0.1:\(settingsManager.settings.localGlucosePort)")!)
-        : nightscoutAPI
+            ? NightscoutAPI(url: URL(string: "http://127.0.0.1:\(settingsManager.settings.localGlucosePort)")!)
+            : nightscoutAPI
 
         return maybeNightscout?.url
     }
@@ -109,8 +109,8 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
         }
 
         let maybeNightscout = useLocal
-        ? NightscoutAPI(url: URL(string: "http://127.0.0.1:\(settingsManager.settings.localGlucosePort)")!)
-        : nightscoutAPI
+            ? NightscoutAPI(url: URL(string: "http://127.0.0.1:\(settingsManager.settings.localGlucosePort)")!)
+            : nightscoutAPI
 
         guard let nightscout = maybeNightscout else {
             return Just([]).eraseToAnyPublisher()
@@ -640,7 +640,7 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
                 .store(in: &self.lifetime)
         }
     }
-    
+
     func uploadNoteTreatment(note: String) {
         let uploadedNotes = storage.retrieve(OpenAPS.Nightscout.uploadedNotes, as: [NightscoutTreatment].self) ?? []
         let now = Date()
