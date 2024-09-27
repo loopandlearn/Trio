@@ -25,3 +25,31 @@ struct PushMessage: Decodable {
         case timestamp
     }
 }
+
+extension PushMessage {
+    func humanReadableDescription() -> String {
+        var description = "User: \(user). Command Type: \(commandType). "
+        switch commandType {
+        case "bolus":
+            if let amount = bolusAmount {
+                description += "Bolus Amount: \(amount) units."
+            } else {
+                description += "Bolus Amount: unknown."
+            }
+        case "temp_target":
+            let targetDescription = target != nil ? "\(target!) mg/dL" : "unknown target"
+            let durationDescription = duration != nil ? "\(duration!) minutes" : "unknown duration"
+            description += "Temp Target: \(targetDescription), Duration: \(durationDescription)."
+        case "cancel_temp_target":
+            description += "Cancel Temp Target command."
+        case "meal":
+            let carbsDescription = carbs != nil ? "\(carbs!)g carbs" : "unknown carbs"
+            let fatDescription = fat != nil ? "\(fat!)g fat" : "unknown fat"
+            let proteinDescription = protein != nil ? "\(protein!)g protein" : "unknown protein"
+            description += "Meal with \(carbsDescription), \(fatDescription), \(proteinDescription)."
+        default:
+            description += "Unsupported command type."
+        }
+        return description
+    }
+}

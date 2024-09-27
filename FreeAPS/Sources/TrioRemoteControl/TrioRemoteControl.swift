@@ -15,43 +15,58 @@ class TrioRemoteControl: Injectable {
         injectServices(FreeAPSApp.resolver)
     }
 
+    private func logError(_ errorMessage: String, pushMessage: PushMessage? = nil) {
+        var note = errorMessage
+        if let pushMessage = pushMessage {
+            note += " Details: \(pushMessage.humanReadableDescription())"
+        }
+        debug(.remoteControl, note)
+        nightscoutManager.uploadNoteTreatment(note: note)
+    }
+
     func handleRemoteNotification(userInfo: [AnyHashable: Any]) {
         let enabled = UserDefaults.standard.bool(forKey: "TRCenabled")
         guard enabled else {
-            let note = "Remote command received, but remote control is disabled in settings. Ignoring command."
-            debug(.remoteControl, note)
-            nightscoutManager.uploadNoteTreatment(note: note)
+            logError("Remote command received, but remote control is disabled in settings. Ignoring the command.")
             return
         }
 
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: userInfo)
-
             let pushMessage = try JSONDecoder().decode(PushMessage.self, from: jsonData)
-
             let currentTime = Date().timeIntervalSince1970
             let timeDifference = currentTime - pushMessage.timestamp
 
-            guard abs(timeDifference) <= timeWindow else {
-                let note = "Push message rejected: time difference of \(timeDifference) seconds exceeds the allowed window."
-                debug(.remoteControl, note)
-                nightscoutManager.uploadNoteTreatment(note: note)
+            if timeDifference > timeWindow {
+                logError(
+                    "Command rejected: the message is too old (sent \(Int(timeDifference)) seconds ago, which exceeds the allowed limit).",
+                    pushMessage: pushMessage
+                )
+                return
+            } else if timeDifference < -timeWindow {
+                logError(
+                    "Command rejected: the message has an invalid future timestamp (timestamp is \(Int(-timeDifference)) seconds ahead of the current time).",
+                    pushMessage: pushMessage
+                )
                 return
             }
-            debug(.remoteControl, "Push message with acceptable timestamp difference: \(timeDifference) seconds.")
+
+            debug(.remoteControl, "Command received with acceptable time difference: \(Int(timeDifference)) seconds.")
 
             let storedSecret = UserDefaults.standard.string(forKey: "TRCsharedSecret") ?? ""
             guard !storedSecret.isEmpty else {
-                let note = "Shared secret is missing in settings. Validation of the push message cannot proceed without it."
-                debug(.remoteControl, note)
-                nightscoutManager.uploadNoteTreatment(note: note)
+                logError(
+                    "Command rejected: shared secret is missing in settings. Cannot authenticate the command.",
+                    pushMessage: pushMessage
+                )
                 return
             }
 
             guard pushMessage.sharedSecret == storedSecret else {
-                let note = "Shared secret mismatch."
-                debug(.remoteControl, note)
-                nightscoutManager.uploadNoteTreatment(note: note)
+                logError(
+                    "Command rejected: shared secret does not match. Cannot authenticate the command.",
+                    pushMessage: pushMessage
+                )
                 return
             }
 
@@ -65,15 +80,11 @@ class TrioRemoteControl: Injectable {
             case "meal":
                 handleMealCommand(pushMessage)
             default:
-                let note = "Unsupported command type received: \(pushMessage.commandType)"
-                debug(.remoteControl, note)
-                nightscoutManager.uploadNoteTreatment(note: note)
+                logError("Command rejected: unsupported command type '\(pushMessage.commandType)'.", pushMessage: pushMessage)
             }
 
         } catch {
-            let note = "Failed to decode PushMessage: \(error.localizedDescription)"
-            debug(.remoteControl, note)
-            nightscoutManager.uploadNoteTreatment(note: note)
+            logError("Error: unable to process the command due to decoding failure (\(error.localizedDescription)).")
         }
     }
 
@@ -83,9 +94,7 @@ class TrioRemoteControl: Injectable {
             let fat = pushMessage.fat,
             let protein = pushMessage.protein
         else {
-            let note = "Meal command received with missing or invalid data."
-            debug(.remoteControl, note)
-            nightscoutManager.uploadNoteTreatment(note: note)
+            logError("Command rejected: meal data is incomplete or invalid.", pushMessage: pushMessage)
             return
         }
 
@@ -94,37 +103,36 @@ class TrioRemoteControl: Injectable {
         let maxFat = settings?.maxFat ?? Decimal(0)
         let maxProtein = settings?.maxProtein ?? Decimal(0)
 
-        guard Decimal(carbs) <= maxCarbs else {
-            let note = "Meal command rejected: received carbs \(carbs) exceeds the max allowed carbs \(maxCarbs)."
-            debug(.remoteControl, note)
-            nightscoutManager.uploadNoteTreatment(note: note)
+        if Decimal(carbs) > maxCarbs {
+            logError(
+                "Command rejected: carbs amount (\(carbs)g) exceeds the maximum allowed (\(maxCarbs)g).",
+                pushMessage: pushMessage
+            )
             return
         }
 
-        guard Decimal(fat) <= maxFat else {
-            let note = "Meal command rejected: received fat \(fat) exceeds the max allowed fat \(maxFat)."
-            debug(.remoteControl, note)
-            nightscoutManager.uploadNoteTreatment(note: note)
+        if Decimal(fat) > maxFat {
+            logError("Command rejected: fat amount (\(fat)g) exceeds the maximum allowed (\(maxFat)g).", pushMessage: pushMessage)
             return
         }
 
-        guard Decimal(protein) <= maxProtein else {
-            let note = "Meal command rejected: received protein \(protein) exceeds the max allowed protein \(maxProtein)."
-            debug(.remoteControl, note)
-            nightscoutManager.uploadNoteTreatment(note: note)
+        if Decimal(protein) > maxProtein {
+            logError(
+                "Command rejected: protein amount (\(protein)g) exceeds the maximum allowed (\(maxProtein)g).",
+                pushMessage: pushMessage
+            )
             return
         }
 
         let pushMessageDate = Date(timeIntervalSince1970: pushMessage.timestamp)
-
         let recentCarbEntries = carbsStorage.recent()
-
         let carbsAfterPushMessage = recentCarbEntries.filter { $0.createdAt > pushMessageDate }
 
         if !carbsAfterPushMessage.isEmpty {
-            let note = "Meal command rejected: there are carb entries logged after the push message was created."
-            debug(.remoteControl, note)
-            nightscoutManager.uploadNoteTreatment(note: note)
+            logError(
+                "Command rejected: newer carb entries have been logged since the command was sent.",
+                pushMessage: pushMessage
+            )
             return
         }
 
@@ -141,28 +149,26 @@ class TrioRemoteControl: Injectable {
         )
 
         carbsStorage.storeCarbs([mealEntry])
-        debug(.remoteControl, "Meal command processed successfully with carbs: \(carbs), fat: \(fat), protein: \(protein)")
+        debug(.remoteControl, "Meal command processed successfully with carbs: \(carbs)g, fat: \(fat)g, protein: \(protein)g.")
     }
 
     private func handleBolusCommand(_ pushMessage: PushMessage) {
         guard let bolusAmount = pushMessage.bolusAmount else {
-            let note = "Bolus command received without a valid bolus amount."
-            debug(.remoteControl, note)
-            nightscoutManager.uploadNoteTreatment(note: note)
+            logError("Command rejected: bolus amount is missing or invalid.", pushMessage: pushMessage)
             return
         }
 
         let maxBolus = FreeAPSApp.resolver.resolve(SettingsManager.self)?.pumpSettings.maxBolus ?? Decimal(0)
 
-        guard bolusAmount <= maxBolus else {
-            let note = "Bolus command rejected: requested amount \(bolusAmount) exceeds max bolus limit of \(maxBolus)."
-            debug(.remoteControl, note)
-            nightscoutManager.uploadNoteTreatment(note: note)
+        if bolusAmount > maxBolus {
+            logError(
+                "Command rejected: bolus amount (\(bolusAmount) units) exceeds the maximum allowed (\(maxBolus) units).",
+                pushMessage: pushMessage
+            )
             return
         }
 
         let recentPumpEvents = pumpHistoryStorage.recent()
-
         let recentBoluses = recentPumpEvents.filter { event in
             event.type == .bolus && event.timestamp > Date(timeIntervalSince1970: pushMessage.timestamp)
         }
@@ -170,37 +176,32 @@ class TrioRemoteControl: Injectable {
         let totalRecentBolusAmount = recentBoluses.reduce(Decimal(0)) { $0 + ($1.amount ?? 0) }
 
         if totalRecentBolusAmount >= bolusAmount * 0.2 {
-            let note =
-                "Bolus command rejected: total recent bolus amount exceeds 20% of requested bolus amount."
-            debug(.remoteControl, note)
-            nightscoutManager.uploadNoteTreatment(note: note)
+            logError(
+                "Command rejected: boluses totaling more than 20% of the requested amount have been delivered since the command was sent.",
+                pushMessage: pushMessage
+            )
             return
         }
 
-        debug(.remoteControl, "Enacting bolus command with amount: \(bolusAmount)")
+        debug(.remoteControl, "Enacting bolus command with amount: \(bolusAmount) units.")
 
         guard let apsManager = FreeAPSApp.resolver.resolve(APSManager.self) else {
-            let note = "APSManager is not available."
-            debug(.remoteControl, note)
-            nightscoutManager.uploadNoteTreatment(note: note)
+            logError("Error: unable to process bolus command because the APS Manager is not available.", pushMessage: pushMessage)
             return
         }
 
-        apsManager.enactBolus(amount: Double(bolusAmount), isSMB: false)
+        apsManager.enactBolus(amount: Double(truncating: bolusAmount as NSNumber), isSMB: false)
     }
 
     private func handleTempTargetCommand(_ pushMessage: PushMessage) {
         guard let targetValue = pushMessage.target,
               let durationValue = pushMessage.duration
         else {
-            let note = "Temp target command received with missing or invalid data."
-            debug(.remoteControl, note)
-            nightscoutManager.uploadNoteTreatment(note: note)
+            logError("Command rejected: temp target data is incomplete or invalid.", pushMessage: pushMessage)
             return
         }
 
         let durationInMinutes = Int(durationValue)
-
         let tempTarget = TempTarget(
             name: "Remote Control",
             createdAt: Date(),
@@ -212,24 +213,20 @@ class TrioRemoteControl: Injectable {
         )
 
         tempTargetsStorage.storeTempTargets([tempTarget])
-
         debug(.remoteControl, "Temp target set with target: \(targetValue), duration: \(durationInMinutes) minutes.")
     }
 
     func cancelTempTarget() {
-        debug(.remoteControl, "Cancelling Temp Target")
+        debug(.remoteControl, "Cancelling temp target.")
 
         guard tempTargetsStorage.current() != nil else {
-            let note = "No active temp target to cancel."
-            debug(.remoteControl, note)
-            nightscoutManager.uploadNoteTreatment(note: note)
+            logError("Command rejected: no active temp target to cancel.")
             return
         }
 
         let cancelEntry = TempTarget.cancel(at: Date())
         tempTargetsStorage.storeTempTargets([cancelEntry])
-
-        debug(.remoteControl, "Temp Target cancelled successfully.")
+        debug(.remoteControl, "Temp target cancelled successfully.")
     }
 
     func handleAPNSChanges(deviceToken: String?) {
@@ -237,25 +234,24 @@ class TrioRemoteControl: Injectable {
         let previousIsAPNSProduction = UserDefaults.standard.bool(forKey: "isAPNSProduction")
 
         let isAPNSProduction = isRunningInAPNSProductionEnvironment()
-
         var shouldUploadProfiles = false
 
         if let token = deviceToken, token != previousDeviceToken {
             UserDefaults.standard.set(token, forKey: "deviceToken")
-            debug(.remoteControl, "Device Token updated: \(token)")
+            debug(.remoteControl, "Device token updated: \(token)")
             shouldUploadProfiles = true
         }
 
         if previousIsAPNSProduction != isAPNSProduction {
             UserDefaults.standard.set(isAPNSProduction, forKey: "isAPNSProduction")
-            debug(.remoteControl, "APNS Environment changed to: \(isAPNSProduction ? "Production" : "Sandbox")")
+            debug(.remoteControl, "APNS environment changed to: \(isAPNSProduction ? "Production" : "Sandbox")")
             shouldUploadProfiles = true
         }
 
         if shouldUploadProfiles {
             nightscoutManager.uploadProfileAndSettings(true)
         } else {
-            debug(.remoteControl, "No changes detected in deviceToken or APNS environment.")
+            debug(.remoteControl, "No changes detected in device token or APNS environment.")
         }
     }
 
