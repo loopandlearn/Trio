@@ -1,4 +1,5 @@
 import Combine
+import CoreData
 import Foundation
 import LoopKitUI
 import Swinject
@@ -66,6 +67,16 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
     init(resolver: Resolver) {
         injectServices(resolver)
         subscribe()
+        Foundation.NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(overridesDidChange),
+            name: .overridesDidChange,
+            object: nil
+        )
+    }
+
+    @objc private func overridesDidChange() {
+        uploadProfileAndSettings(true)
     }
 
     private func subscribe() {
@@ -405,6 +416,21 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
         }
     }
 
+    private func fetchOverrides() -> [NightscoutOverridePreset]? {
+        let context = CoreDataStack.shared.persistentContainer.viewContext
+        let fetchRequest = OverridePresets.fetchRequest() as NSFetchRequest<OverridePresets>
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+        fetchRequest.predicate = NSPredicate(format: "name != %@", "" as String)
+
+        do {
+            let overrides = try context.fetch(fetchRequest)
+            return overrides.map { $0.toNightscoutOverridePreset() }
+        } catch {
+            debug(.nightscout, "Failed to fetch overrides: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
     func uploadProfileAndSettings(_ force: Bool) {
         guard let sensitivities = storage.retrieve(OpenAPS.Settings.insulinSensitivities, as: InsulinSensitivities.self) else {
             debug(.nightscout, "NightscoutManager uploadProfile: error loading insulinSensitivities")
@@ -428,6 +454,10 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
         }
         guard let basalProfile = storage.retrieve(OpenAPS.Settings.basalProfile, as: [BasalProfileEntry].self) else {
             debug(.nightscout, "NightscoutManager uploadProfile: error loading basalProfile")
+            return
+        }
+        guard let overridePresets = fetchOverrides() else {
+            debug(.nightscout, "NightscoutManager uploadProfile: error loading overrides")
             return
         }
 
@@ -518,7 +548,8 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
             store: [defaultProfile: ps],
             bundleIdentifier: bundleIdentifier,
             deviceToken: deviceToken,
-            isAPNSProduction: isAPNSProduction
+            isAPNSProduction: isAPNSProduction,
+            overridePresets: overridePresets
         )
 
         guard let nightscout = nightscoutAPI, isNetworkReachable, isUploadEnabled else {

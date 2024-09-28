@@ -479,6 +479,7 @@ extension OverrideProfilesConfig {
             }
             do {
                 try moc.save()
+                Foundation.NotificationCenter.default.post(name: .overridesDidChange, object: nil)
             } catch {
                 // To do: add error
             }

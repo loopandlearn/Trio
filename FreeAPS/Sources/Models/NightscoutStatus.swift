@@ -55,4 +55,49 @@ struct NightscoutProfileStore: JSON {
     let bundleIdentifier: String
     let deviceToken: String
     let isAPNSProduction: Bool
+    let overridePresets: [NightscoutOverridePreset]
+}
+
+struct NightscoutOverridePreset: Codable {
+    var advancedSettings: Bool
+    var cr: Bool
+    var date: Date?
+    var duration: Decimal?
+    var end: Decimal?
+    var id: String?
+    var indefinite: Bool
+    var isf: Bool
+    var isfAndCr: Bool
+    var name: String?
+    var percentage: Double
+    var smbIsOff: Bool
+    var smbIsScheduledOff: Bool
+    var smbMinutes: Decimal?
+    var start: Decimal?
+    var target: Decimal?
+    var uamMinutes: Decimal?
+}
+
+extension OverridePresets {
+    func toNightscoutOverridePreset() -> NightscoutOverridePreset {
+        NightscoutOverridePreset(
+            advancedSettings: advancedSettings,
+            cr: cr,
+            date: date,
+            duration: duration?.decimalValue,
+            end: end?.decimalValue,
+            id: id,
+            indefinite: indefinite,
+            isf: isf,
+            isfAndCr: isfAndCr,
+            name: name,
+            percentage: percentage,
+            smbIsOff: smbIsOff,
+            smbIsScheduledOff: smbIsScheduledOff,
+            smbMinutes: smbMinutes?.decimalValue,
+            start: start?.decimalValue,
+            target: target?.decimalValue,
+            uamMinutes: uamMinutes?.decimalValue
+        )
+    }
 }

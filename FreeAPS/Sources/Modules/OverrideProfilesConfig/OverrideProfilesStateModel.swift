@@ -1,5 +1,10 @@
 import CoreData
+import Foundation
 import SwiftUI
+
+extension Notification.Name {
+    static let overridesDidChange = Notification.Name("overridesDidChange")
+}
 
 extension OverrideProfilesConfig {
     final class StateModel: BaseStateModel<Provider> {
@@ -189,6 +194,7 @@ extension OverrideProfilesConfig {
                     saveOverride.uamMinutes = uamMinutes as NSDecimalNumber
                 }
                 try? self.coredataContext.save()
+                Foundation.NotificationCenter.default.post(name: .overridesDidChange, object: nil)
             }
         }
 
@@ -360,6 +366,7 @@ extension OverrideProfilesConfig {
                 preset.uamMinutes = NSDecimalNumber(decimal: uamMinutes)
                 preset.isfAndCr = isfAndCr
                 try? context.save()
+                Foundation.NotificationCenter.default.post(name: .overridesDidChange, object: nil)
             }
         }
     }
