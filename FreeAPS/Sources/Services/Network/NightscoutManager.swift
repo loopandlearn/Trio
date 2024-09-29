@@ -358,13 +358,14 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
 
         let uploader = Uploader(batteryVoltage: nil, battery: Int(device.batteryLevel * 100))
 
-        var status: NightscoutStatus
+        let activeOverride = getCurrentActiveOverride()
 
-        status = NightscoutStatus(
+        let status = NightscoutStatus(
             device: NightscoutTreatment.local,
             openaps: openapsStatus,
             pump: pump,
-            uploader: uploader
+            uploader: uploader,
+            activeOverride: activeOverride
         )
 
         storage.save(status, as: OpenAPS.Upload.nsStatus)
@@ -687,6 +688,75 @@ final class BaseNightscoutManager: NightscoutManager, Injectable {
             )
             uploadTreatments([noteTreatment], fileToSave: OpenAPS.Nightscout.uploadedNotes)
         }
+    }
+
+    private func getCurrentActiveOverride() -> NightscoutOverridePreset? {
+        let context = CoreDataStack.shared.persistentContainer.viewContext
+        var activeOverridePreset: NightscoutOverridePreset?
+
+        context.performAndWait {
+            let fetchRequest = Override.fetchRequest() as NSFetchRequest<Override>
+            fetchRequest.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
+            fetchRequest.fetchLimit = 1
+
+            do {
+                if let override = try context.fetch(fetchRequest).first {
+                    let enabled = override.enabled
+                    let indefinite = override.indefinite
+                    let duration = (override.duration ?? 0).decimalValue
+                    let date = override.date ?? Date()
+                    let endDate = date.addingTimeInterval(TimeInterval(NSDecimalNumber(decimal: duration).doubleValue * 60))
+                    let now = Date()
+                    let isActive = enabled && (indefinite || endDate > now)
+
+                    if isActive {
+                        var name: String?
+
+                        if override.isPreset {
+                            if let id = override.id {
+                                let presetFetchRequest = OverridePresets.fetchRequest() as NSFetchRequest<OverridePresets>
+                                presetFetchRequest.predicate = NSPredicate(format: "id == %@", id)
+                                presetFetchRequest.fetchLimit = 1
+                                if let preset = try context.fetch(presetFetchRequest).first {
+                                    name = preset.name
+                                }
+                            }
+                        } else {
+                            name = NSLocalizedString("Custom Profile", comment: "Custom but unsaved Profile")
+                        }
+
+                        activeOverridePreset = NightscoutOverridePreset(
+                            advancedSettings: override.advancedSettings,
+                            cr: override.cr,
+                            date: override.date,
+                            duration: override.duration?.decimalValue,
+                            end: override.end?.decimalValue,
+                            id: override.id,
+                            indefinite: override.indefinite,
+                            isf: override.isf,
+                            isfAndCr: override.isfAndCr,
+                            name: name,
+                            percentage: override.percentage,
+                            smbIsOff: override.smbIsOff,
+                            smbIsScheduledOff: override.smbIsScheduledOff,
+                            smbMinutes: override.smbMinutes?.decimalValue,
+                            start: override.start?.decimalValue,
+                            target: override.target?.decimalValue,
+                            uamMinutes: override.uamMinutes?.decimalValue
+                        )
+                    } else {
+                        activeOverridePreset = nil
+                    }
+                } else {
+                    activeOverridePreset = nil
+                }
+            } catch {
+                debug(.nightscout, "Failed to fetch override: \(error.localizedDescription)")
+                activeOverridePreset = nil
+            }
+        }
+
+        return activeOverridePreset
     }
 }
 
